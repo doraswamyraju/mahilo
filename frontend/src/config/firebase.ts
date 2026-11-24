@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 // User's Firebase project configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDummyKeyForInitializationOnly",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAJgnZiuOWH4VVTNQ_gUWux0gijzz9UcUk",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "mahilo-c6e49.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "mahilo-c6e49",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mahilo-c6e49.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1029384756",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1029384756:web:mahilo12345"
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mahilo-c6e49.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "745079363516",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:745079363516:web:54fe8fcc7c25f75a15bdb9"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
