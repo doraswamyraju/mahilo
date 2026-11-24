@@ -1,160 +1,194 @@
-# MAHILO — Production Deployment & Disaster Recovery Guide
+# MAHILO — VPS Deployment & Production Operations Guide
 
-## 1. Production Architecture Overview
-
-* **Cloud Provider:** Hostinger VPS (Ubuntu 22.04 / 24.04 LTS)
-* **Web Server & Reverse Proxy:** Nginx (with HTTP/2 and Brotli compression)
-* **DNS & SSL/TLS:** Cloudflare DNS with Full (Strict) SSL Mode
-* **Application Runtime:** Node.js v20.x managed by PM2 Process Manager
-* **Database:** PostgreSQL 16 (Strict ACID with normalized relational models)
-* **Payment Gateway:** Razorpay (Production Key Pair + Webhook HMAC verification)
+> **Target Domain:** [https://mahilo.sriddha.com](https://mahilo.sriddha.com)  
+> **Dedicated VPS Port:** `5093`  
+> **Hostinger VPS IP:** `147.93.107.21`  
+> **Git Repository:** `https://github.com/doraswamyraju/mahilo.git`  
+> **Target Production Branch:** `main` (Web Module only)  
 
 ---
 
-## 2. Server Provisioning & Initial Setup
+## 1. Branch Strategy (Why VPS Pulls Only `main`)
+
+The Git repository holds 3 dedicated branches:
+1. **`main`**: The **Web Module** (React frontend + Node.js/Express backend API + VPS configs). This is the **only** branch deployed on the server.
+2. **`android`**: Native Android Jetpack Compose app codebase (`android/`). Kept on GitHub and local development machines only.
+3. **`ios`**: iOS mobile application codebase. Kept on GitHub and local development machines only.
+
+### How to Clone ONLY the Web Module (Ignoring Mobile Branches)
+On your VPS, use the `--single-branch` flag so Git will **only track and download `main`**. Git will never fetch or store `android` or `ios` objects on your server disk:
 
 ```bash
-# 1. Update OS packages
-sudo apt update && sudo apt upgrade -y
-
-# 2. Install essential utilities
-sudo apt install -y curl git ufw nginx postgresql postgresql-contrib
-
-# 3. Install Node.js 20 LTS via Nodesource
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-sudo npm install -g pm2
-
-# 4. Configure Firewall (UFW)
-sudo ufw allow OpenSSH
-sudo ufw allow 'Nginx Full'
-sudo ufw enable
+# Clone exclusively the main branch (Web Module)
+git clone --single-branch --branch main https://github.com/doraswamyraju/mahilo.git /var/www/mahilo
 ```
 
 ---
 
-## 3. Production PostgreSQL Database Setup
+## 2. Multi-App Isolation Guarantee (Port 5093)
 
-```bash
-# Switch to postgres user
-sudo -i -u postgres
+The VPS hosts multiple applications on ports `5085` through `5092`.  
+To ensure MAHILO operates in **100% isolation** without touching any other application:
 
-# Create database and user with strong password
-psql -c "CREATE USER mahilo_prod_user WITH PASSWORD 'REPLACE_WITH_SECURE_STRONG_PASSWORD';"
-psql -c "CREATE DATABASE mahilo_prod_db OWNER mahilo_prod_user;"
-psql -c "GRANT ALL PRIVILEGES ON DATABASE mahilo_prod_db TO mahilo_prod_user;"
-exit
-```
+1. **Dedicated Port Binding**:
+   - The application binds strictly to port `5093`.
+   - Unified single-port architecture: Node.js on port `5093` serves both the `/api/*` endpoints and the compiled React production bundle (`frontend/dist`) on `/*`. No secondary port is consumed.
+2. **Isolated PM2 Process**:
+   - Runs under the process name `mahilo-web`.
+   - Controlled via `ecosystem.config.cjs`:
+     ```javascript
+     module.exports = {
+       apps: [
+         {
+           name: 'mahilo-web',
+           cwd: './backend',
+           script: 'dist/server.js',
+           instances: 1,
+           autorestart: true,
+           env: {
+             NODE_ENV: 'production',
+             PORT: 5093,
+             CLIENT_URL: 'https://mahilo.sriddha.com'
+           }
+         }
+       ]
+     };
+     ```
+3. **Isolated Nginx Virtual Host**:
+   - Nginx matches exclusively on `server_name mahilo.sriddha.com;` and proxies traffic only to `127.0.0.1:5093`.
+   - All other existing domain blocks and port forwardings remain completely untouched.
 
 ---
 
-## 4. Application Deployment Steps
+## 3. Initial Server Setup (One-Time)
 
+### Step 1: Firewall Rule Verification
+Hostinger VPS firewall has port `5093` opened for incoming TCP traffic. If UFW is active on your Linux instance:
 ```bash
-# 1. Clone repository into /var/www/mahilo
+sudo ufw allow 5093/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+```
+
+### Step 2: Clone Repository (Main Branch Only)
+```bash
 sudo mkdir -p /var/www/mahilo
 sudo chown -R $USER:$USER /var/www/mahilo
+git clone --single-branch --branch main https://github.com/doraswamyraju/mahilo.git /var/www/mahilo
 cd /var/www/mahilo
-git clone <YOUR_GIT_REPOSITORY_URL> .
+```
 
-# 2. Setup Backend
-cd /var/www/mahilo/backend
-cp .env.example .env
-nano .env # Configure production secrets, DATABASE_URL, RAZORPAY keys, and JWT_SECRET
+### Step 3: Create Backend Production Environment File
+Create `/var/www/mahilo/backend/.env`:
+```bash
+cat << 'EOF' > /var/www/mahilo/backend/.env
+PORT=5093
+NODE_ENV=production
+CLIENT_URL=https://mahilo.sriddha.com
+JWT_SECRET=mahilo_super_secure_production_secret_key_2026
+JWT_EXPIRES_IN=1d
+REFRESH_TOKEN_SECRET=mahilo_refresh_secret_secure_key_2026
+REFRESH_TOKEN_EXPIRES_IN=7d
+RAZORPAY_KEY_ID=rzp_live_placeholder
+RAZORPAY_KEY_SECRET=rzp_secret_placeholder
+UPLOAD_DIR=./uploads
+EOF
+```
 
-npm install --production=false
-npx prisma generate
-npx prisma db push
-npm run build
-
-# 3. Start Backend with PM2
-pm2 start dist/server.js --name "mahilo-api" -i max
+### Step 4: Run Initial Build and Start PM2
+```bash
+cd /var/www/mahilo
+bash deploy.sh
+```
+Save the PM2 process list so it automatically restarts on server reboots:
+```bash
 pm2 save
 pm2 startup
-
-# 4. Setup Frontend
-cd /var/www/mahilo/frontend
-npm install
-npm run build # Outputs production static assets to /var/www/mahilo/frontend/dist
 ```
 
----
-
-## 5. Nginx Reverse Proxy Configuration
-
-Create `/etc/nginx/sites-available/mahilo`:
-
-```nginx
-server {
-    listen 80;
-    server_name mahilo.in www.mahilo.in;
-
-    # Gzip Compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/javascript application/json application/javascript;
-
-    # Frontend Static Single Page Application
-    location / {
-        root /var/www/mahilo/frontend/dist;
-        index index.html;
-        try_files $uri $uri/ /index.html;
-        expires 7d;
-        add_header Cache-Control "public, no-transform";
-    }
-
-    # Backend REST API Reverse Proxy
-    location /api/ {
-        proxy_pass http://127.0.0.1:5000/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-Enable the site and reload Nginx:
+### Step 5: Configure Nginx Virtual Host
 ```bash
-sudo ln -s /etc/nginx/sites-available/mahilo /etc/nginx/sites-enabled/
+sudo cp /var/www/mahilo/nginx.conf.example /etc/nginx/sites-available/mahilo.sriddha.com
+sudo ln -s /etc/nginx/sites-available/mahilo.sriddha.com /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
+### Step 6: Install Free SSL Certificate (Let's Encrypt / Certbot)
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d mahilo.sriddha.com
+```
+
 ---
 
-## 6. Automated Database Backup & Disaster Recovery
+## 4. Routine Updates (How to Update Backend & Frontend on VPS)
 
-### Automated Daily Backup Cron Job
-Create `/usr/local/bin/backup-mahilo.sh`:
+Whenever you push new changes, bugfixes, or features to `main`:
 
+### Option A: Automated 1-Click Update (Recommended)
 ```bash
-#!/bin/bash
-BACKUP_DIR="/var/backups/mahilo_db"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-mkdir -p "$BACKUP_DIR"
+cd /var/www/mahilo
+bash deploy.sh
+```
+This script automatically pulls the latest `main` branch, builds the frontend, compiles the backend, and performs a zero-downtime PM2 reload (`pm2 reload mahilo-web`).
 
-# Run pg_dump
-pg_dump -U mahilo_prod_user -h localhost -d mahilo_prod_db | gzip > "$BACKUP_DIR/mahilo_$TIMESTAMP.sql.gz"
-
-# Retain backups for 14 days, delete older
-find "$BACKUP_DIR" -type f -name "mahilo_*.sql.gz" -mtime +14 -exec rm {} \;
+### Option B: Updating the Backend Only
+If you only modified backend API routes or database models:
+```bash
+cd /var/www/mahilo
+git pull origin main
+cd backend
+npm install
+npm run build
+pm2 reload mahilo-web
 ```
 
-Set permissions and schedule in crontab:
+### Option C: Updating the Frontend Only
+If you only updated UI components, styles, or user modules:
 ```bash
-sudo chmod +x /usr/local/bin/backup-mahilo.sh
-# Run every night at 2:00 AM
-(crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/backup-mahilo.sh") | crontab -
+cd /var/www/mahilo
+git pull origin main
+cd frontend
+npm install --legacy-peer-deps
+npm run build
+pm2 reload mahilo-web
 ```
 
-### Database Recovery Procedure
+---
+
+## 5. Health Checks & Monitoring Commands
+
 ```bash
-# To restore from a backup:
-gunzip -c /var/backups/mahilo_db/mahilo_YYYYMMDD_HHMMSS.sql.gz | psql -U mahilo_prod_user -h localhost -d mahilo_prod_db
+# Check if PM2 process is running on port 5093
+pm2 status
+
+# View live application logs (useful for debugging)
+pm2 logs mahilo-web
+
+# Test internal API health endpoint on port 5093
+curl -i http://localhost:5093/api/health
+
+# Verify port 5093 is actively listening
+sudo netstat -tlpn | grep 5093
+# or
+sudo ss -tulpn | grep 5093
 ```
+
+---
+
+## 6. Future Migration to Dedicated Domain (e.g. `mahilo.in`)
+
+When you register a dedicated brand domain:
+1. **DNS**: Point the `@` and `www` A records of your new domain to `147.93.107.21`.
+2. **Nginx**:
+   Update `server_name` in `/etc/nginx/sites-available/mahilo.sriddha.com`:
+   ```nginx
+   server_name mahilo.in www.mahilo.in mahilo.sriddha.com;
+   ```
+   Reload Nginx and run Certbot for the new domain:
+   ```bash
+   sudo certbot --nginx -d mahilo.in -d www.mahilo.in
+   ```
+3. **Application Code**:
+   **No code changes required!** All frontend API calls use relative paths (`/api`). The backend automatically responds to requests from the new host.
