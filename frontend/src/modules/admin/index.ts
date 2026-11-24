@@ -1,3 +1,6 @@
 export * from './AdminOverviewModule.js';
 export * from './AdminSellerApprovalsModule.js';
+export * from './AdminCatalogModerationModule.js';
+export * from './AdminOrdersModule.js';
+export * from './AdminBookingsModule.js';
 export * from './AdminHubPage.js';
