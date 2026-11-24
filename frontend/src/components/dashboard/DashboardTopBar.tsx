@@ -73,8 +73,8 @@ export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
     <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         
-        {/* Left Section: Menu Toggle, High-Contrast Light Brand Logo */}
-        <div className="flex items-center gap-3">
+        {/* Left Section: Menu Toggle, High-Contrast Light Brand Logo, Sidebar Collapse Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Mobile Menu */}
           <button
             type="button"
@@ -85,23 +85,10 @@ export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
             <Menu size={20} />
           </button>
 
-          {/* Desktop Rail Collapse Toggle */}
-          {onToggleDesktopCollapse && (
-            <button
-              type="button"
-              onClick={onToggleDesktopCollapse}
-              aria-label={isDesktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="hidden lg:flex p-2 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-              title={isDesktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {isDesktopCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
-            </button>
-          )}
-
           {/* High-Contrast Light Logo (Dark purple/magenta on transparent) */}
           <div 
             onClick={onBackToStore}
-            className="flex items-center cursor-pointer select-none py-1 hover:opacity-90 transition-opacity"
+            className="flex items-center cursor-pointer select-none py-1 hover:opacity-90 transition-opacity shrink-0"
             title="Return to Marketplace Store"
           >
             <img 
@@ -110,6 +97,19 @@ export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
               className="h-9 sm:h-10 w-auto object-contain"
             />
           </div>
+
+          {/* Desktop Rail Collapse Toggle - Moved to the Right Side of the Logo */}
+          {onToggleDesktopCollapse && (
+            <button
+              type="button"
+              onClick={onToggleDesktopCollapse}
+              aria-label={isDesktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="hidden lg:flex p-1.5 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+              title={isDesktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isDesktopCollapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+            </button>
+          )}
         </div>
 
         {/* Center: Command-Style Global Search Bar */}
@@ -135,63 +135,8 @@ export const DashboardTopBar: React.FC<DashboardTopBarProps> = ({
           </div>
         </div>
 
-        {/* Right Section: Role Switcher, Storefront, Notifications, User Menu */}
+        {/* Right Section: Notifications, User Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
-          
-          {/* Role Switcher Pill */}
-          {onRoleChange && (
-            <div className="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/70 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => onRoleChange('CUSTOMER')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  role === 'CUSTOMER'
-                    ? 'bg-white text-[#2D0133] shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <ShoppingBag size={13} className={role === 'CUSTOMER' ? 'text-[#D81B60]' : 'text-slate-400'} />
-                <span>Shopper</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onRoleChange('SELLER')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  role === 'SELLER'
-                    ? 'bg-[#3D0A47] text-white shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Sparkles size={13} className={role === 'SELLER' ? 'text-[#FFD814]' : 'text-slate-400'} />
-                <span>Seller Studio</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onRoleChange('ADMIN')}
-                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  role === 'ADMIN'
-                    ? 'bg-[#1E0524] text-white shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Shield size={13} className={role === 'ADMIN' ? 'text-emerald-400' : 'text-slate-400'} />
-                <span>Admin</span>
-              </button>
-            </div>
-          )}
-
-          {/* Marketplace Storefront Link */}
-          <button
-            type="button"
-            onClick={onBackToStore}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-[#D81B60] border border-slate-200 rounded-xl transition-colors"
-            title="Browse Public Marketplace"
-          >
-            <Store size={14} className="text-[#D81B60]" />
-            <span>Storefront</span>
-          </button>
 
           {/* Notifications Bell */}
           <div className="relative" ref={notificationRef}>

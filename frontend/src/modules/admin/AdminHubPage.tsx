@@ -10,6 +10,7 @@ import { AdminBookingsModule } from './AdminBookingsModule.js';
 import { AdminCommissionsModule } from './AdminCommissionsModule.js';
 import { AdminDisputesModule } from './AdminDisputesModule.js';
 import { AdminCategoriesModule } from './AdminCategoriesModule.js';
+import { AdminSettingsModule } from './AdminSettingsModule.js';
 
 export interface AdminHubPageProps {
   initialNavId?: string;
@@ -91,24 +92,7 @@ export const AdminHubPage: React.FC<AdminHubPageProps> = ({ initialNavId = 'over
       {activeNavId === 'disputes' && <AdminDisputesModule />}
       {activeNavId === 'categories' && <AdminCategoriesModule />}
       
-      {activeNavId === 'settings' && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
-          <h2 className="text-base font-bold text-slate-900">Platform Security & Configuration</h2>
-          <p className="text-xs text-slate-500">Razorpay Route payment gateway connected. Webhook listening on active port 5093.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-              <span className="font-bold text-slate-800 block">Payment Gateway</span>
-              <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">● Razorpay Live API Active</span>
-              <span className="text-[10px] text-slate-400">Merchant: Mahilo Innovations Ltd.</span>
-            </div>
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
-              <span className="font-bold text-slate-800 block">SMS & OTP Gateway</span>
-              <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">● Fast2SMS / Firebase Phone Auth</span>
-              <span className="text-[10px] text-slate-400">Sender ID: MAHILO</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {activeNavId === 'settings' && <AdminSettingsModule />}
     </DashboardShell>
   );
 };

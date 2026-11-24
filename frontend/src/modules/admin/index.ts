@@ -6,4 +6,5 @@ export * from './AdminBookingsModule.js';
 export * from './AdminCommissionsModule.js';
 export * from './AdminDisputesModule.js';
 export * from './AdminCategoriesModule.js';
+export * from './AdminSettingsModule.js';
 export * from './AdminHubPage.js';
