@@ -417,3 +417,70 @@ export const updateAdminBookingStatus = async (req: Request, res: Response) => {
     return sendError(res, error.message, 500);
   }
 };
+
+// -------------------------------------------------------------
+// Disputes & Buyer Protection
+// -------------------------------------------------------------
+export const getAdminDisputes = async (req: Request, res: Response) => {
+  try {
+    const { status } = req.query;
+    let disputes = mockDataStore.disputes || [];
+
+    if (status) {
+      disputes = disputes.filter((d: any) => d.status === status);
+    }
+
+    return sendSuccess(res, disputes);
+  } catch (error: any) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const updateAdminDispute = async (req: Request, res: Response) => {
+  try {
+    const { disputeId } = req.params;
+    const { status, resolutionNote } = req.body;
+
+    const dispute = mockDataStore.disputes?.find((d: any) => d.id === disputeId);
+    if (!dispute) return sendError(res, 'Dispute not found', 404);
+
+    dispute.status = status;
+    if (resolutionNote) dispute.adminNotes = resolutionNote;
+    dispute.updatedAt = new Date();
+
+    return sendSuccess(res, dispute, `Dispute marked as ${status}`);
+  } catch (error: any) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+// -------------------------------------------------------------
+// Homepage Hero Banners CMS
+// -------------------------------------------------------------
+export const getAdminBanners = async (req: Request, res: Response) => {
+  try {
+    return sendSuccess(res, mockDataStore.heroBanners || []);
+  } catch (error: any) {
+    return sendError(res, error.message, 500);
+  }
+};
+
+export const updateAdminBanner = async (req: Request, res: Response) => {
+  try {
+    const { bannerId } = req.params;
+    const { title, subtitle, targetUrl, isActive, displayOrder } = req.body;
+
+    const banner = mockDataStore.heroBanners?.find((b: any) => b.id === bannerId);
+    if (!banner) return sendError(res, 'Banner not found', 404);
+
+    if (title) banner.title = title;
+    if (subtitle) banner.subtitle = subtitle;
+    if (targetUrl) banner.targetUrl = targetUrl;
+    if (isActive !== undefined) banner.isActive = isActive;
+    if (displayOrder !== undefined) banner.displayOrder = displayOrder;
+
+    return sendSuccess(res, banner, 'Banner updated successfully');
+  } catch (error: any) {
+    return sendError(res, error.message, 500);
+  }
+};

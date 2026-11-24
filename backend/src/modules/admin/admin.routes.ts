@@ -14,7 +14,11 @@ import {
   getAdminOrders,
   updateAdminOrderStatus,
   getAdminBookings,
-  updateAdminBookingStatus
+  updateAdminBookingStatus,
+  getAdminDisputes,
+  updateAdminDispute,
+  getAdminBanners,
+  updateAdminBanner
 } from './admin.controller.js';
 import { authenticate, requireAdmin } from '../../middleware/auth.js';
 
@@ -45,5 +49,11 @@ router.get('/commissions', getCommissionRules);
 router.put('/commissions/:ruleId', updateCommissionRule);
 router.get('/settlements', getAdminSettlements);
 router.put('/settlements/:settlementId', processSettlement);
+
+// Disputes & Banners
+router.get('/disputes', getAdminDisputes);
+router.put('/disputes/:disputeId', updateAdminDispute);
+router.get('/banners', getAdminBanners);
+router.put('/banners/:bannerId', updateAdminBanner);
 
 export default router;

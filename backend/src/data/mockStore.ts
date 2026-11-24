@@ -798,9 +798,93 @@ export const mockDataStore: any = {
 
   // 14. Transactions / Ledger
   transactions: [],
-  sellerSettlements: [],
+  sellerSettlements: [
+    {
+      id: 'stl-101',
+      sellerId: 'seller-1',
+      settlementRef: 'STL-20261124-819',
+      grossAmount: 1883,
+      deductions: 0,
+      netAmount: 1883,
+      status: 'PENDING',
+      bankUtrNumber: null,
+      processedAt: null,
+      createdAt: new Date('2026-11-24T08:00:00Z'),
+    },
+    {
+      id: 'stl-102',
+      sellerId: 'seller-2',
+      settlementRef: 'STL-20261123-402',
+      grossAmount: 2374,
+      deductions: 0,
+      netAmount: 2374,
+      status: 'PENDING',
+      bankUtrNumber: null,
+      processedAt: null,
+      createdAt: new Date('2026-11-23T16:00:00Z'),
+    },
+    {
+      id: 'stl-100',
+      sellerId: 'seller-1',
+      settlementRef: 'STL-20261118-291',
+      grossAmount: 3450,
+      deductions: 0,
+      netAmount: 3450,
+      status: 'TRANSFERRED',
+      bankUtrNumber: 'CMS982147109283',
+      processedAt: new Date('2026-11-19T11:30:00Z'),
+      createdAt: new Date('2026-11-18T10:00:00Z'),
+    }
+  ],
 
-  // 15. Reviews
+  // 15. Customer Disputes & Return Requests
+  disputes: [
+    {
+      id: 'dsp-101',
+      ticketNumber: 'DSP-20261124-11',
+      orderId: 'ord-mhl-101',
+      orderNumber: 'MHL-20261124-9281',
+      userId: 'usr-customer-1',
+      customerName: 'Ananya Sharma',
+      sellerId: 'seller-1',
+      sellerName: 'Saraswati Crafts',
+      issueType: 'DAMAGED_IN_TRANSIT',
+      title: 'Cracked Terracotta Jar upon unboxing',
+      description: 'The package arrived today but one of the diya jars has a hairline crack on the rim. Please arrange replacement or refund.',
+      evidencePhotoUrl: '/assets/mockup/handicrafts/terracotta_painted_jar.png',
+      claimAmount: 599,
+      status: 'OPEN',
+      adminNotes: null,
+      createdAt: new Date('2026-11-24T12:30:00Z'),
+      updatedAt: new Date('2026-11-24T12:30:00Z'),
+    }
+  ],
+
+  // 16. Homepage Hero Banners
+  heroBanners: [
+    {
+      id: 'bnr-1',
+      title: 'Handcrafted Heritage by Indian Women Artisans',
+      subtitle: 'Shop pure handloom sarees, eco jute bags & terracotta decor',
+      imageUrl: '/assets/mockup/banners/banner_handicrafts.png',
+      targetUrl: '#/category/cat-p-1',
+      badge: 'WOMEN EMPOWERMENT',
+      displayOrder: 1,
+      isActive: true,
+    },
+    {
+      id: 'bnr-2',
+      title: 'Doorstep Beauty & Bridal Services',
+      subtitle: 'Verified women beauticians & certified henna artists at home',
+      imageUrl: '/assets/mockup/banners/banner_beauty.png',
+      targetUrl: '#/services',
+      badge: 'POPULAR IN VIJAYAWADA',
+      displayOrder: 2,
+      isActive: true,
+    }
+  ],
+
+  // 17. Reviews
   reviews: [
     {
       id: 'rev-1',

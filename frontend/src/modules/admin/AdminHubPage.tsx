@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, FolderKanban, ShoppingBag, Calendar } from 'lucide-react';
+import { ShieldCheck, FolderKanban, ShoppingBag, Calendar, DollarSign, AlertTriangle, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.js';
 import { DashboardShell } from '../../components/dashboard/DashboardShell.js';
 import { AdminOverviewModule } from './AdminOverviewModule.js';
@@ -7,6 +7,9 @@ import { AdminSellerApprovalsModule } from './AdminSellerApprovalsModule.js';
 import { AdminCatalogModerationModule } from './AdminCatalogModerationModule.js';
 import { AdminOrdersModule } from './AdminOrdersModule.js';
 import { AdminBookingsModule } from './AdminBookingsModule.js';
+import { AdminCommissionsModule } from './AdminCommissionsModule.js';
+import { AdminDisputesModule } from './AdminDisputesModule.js';
+import { AdminCategoriesModule } from './AdminCategoriesModule.js';
 
 export interface AdminHubPageProps {
   initialNavId?: string;
@@ -23,9 +26,10 @@ export const AdminHubPage: React.FC<AdminHubPageProps> = ({ initialNavId = 'over
       case 'listing-moderation': return 'Catalog Moderation Queue';
       case 'all-orders': return 'Universal Order Oversight';
       case 'all-bookings': return 'Service Bookings Control';
-      case 'disputes': return 'Disputes & Customer Protection';
       case 'commissions': return 'Commission Rates & Payout Ledger';
+      case 'disputes': return 'Disputes & Customer Protection';
       case 'categories': return 'Category & Banner Promotions';
+      case 'settings': return 'Platform Security & System Settings';
       default: return 'Platform Governance Console';
     }
   };
@@ -36,9 +40,10 @@ export const AdminHubPage: React.FC<AdminHubPageProps> = ({ initialNavId = 'over
       case 'listing-moderation': return 'Ensure high product quality, fair pricing, and compliance with guidelines';
       case 'all-orders': return 'Monitor multi-vendor shipments, carrier delivery updates, and fulfillment stages';
       case 'all-bookings': return 'Track doorstep home visits, specialist assignments, and session completion';
-      case 'disputes': return 'Resolve returns, damaged deliveries, and customer complaints';
-      case 'commissions': return 'Set platform commission tiers and track payout settlements';
-      case 'categories': return 'Curate featured artisan collections and homepage carousels';
+      case 'commissions': return 'Set platform commission tiers and disburse automated seller bank payouts';
+      case 'disputes': return 'Resolve customer complaints, return requests, and authorize buyer refunds';
+      case 'categories': return 'Curate featured artisan collections, categories, and homepage hero carousels';
+      case 'settings': return 'Manage platform configuration, payment gateway keys, and SMS/Email notification templates';
       default: return 'Monitor GMV growth, seller verifications, and marketplace trust metrics';
     }
   };
@@ -82,23 +87,26 @@ export const AdminHubPage: React.FC<AdminHubPageProps> = ({ initialNavId = 'over
       {activeNavId === 'listing-moderation' && <AdminCatalogModerationModule />}
       {activeNavId === 'all-orders' && <AdminOrdersModule />}
       {activeNavId === 'all-bookings' && <AdminBookingsModule />}
+      {activeNavId === 'commissions' && <AdminCommissionsModule />}
+      {activeNavId === 'disputes' && <AdminDisputesModule />}
+      {activeNavId === 'categories' && <AdminCategoriesModule />}
       
-      {activeNavId === 'commissions' && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-3">
-          <h2 className="text-base font-bold text-slate-900">Commission Rates & Payout Ledger</h2>
-          <p className="text-xs text-slate-500">Current platform fee set to 5% standard (0% early artisan promo active for first 50 sellers).</p>
-        </div>
-      )}
-      {activeNavId === 'disputes' && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-3">
-          <h2 className="text-base font-bold text-slate-900">Dispute Resolution</h2>
-          <p className="text-xs text-slate-500">1 open inquiry for damaged terracotta transport. Seller notified for replacement.</p>
-        </div>
-      )}
-      {activeNavId === 'categories' && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-3">
-          <h2 className="text-base font-bold text-slate-900">Category & Banner Management</h2>
-          <p className="text-xs text-slate-500">Manage curated collections and promotional hero carousels.</p>
+      {activeNavId === 'settings' && (
+        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+          <h2 className="text-base font-bold text-slate-900">Platform Security & Configuration</h2>
+          <p className="text-xs text-slate-500">Razorpay Route payment gateway connected. Webhook listening on active port 5093.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 text-xs">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span className="font-bold text-slate-800 block">Payment Gateway</span>
+              <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">● Razorpay Live API Active</span>
+              <span className="text-[10px] text-slate-400">Merchant: Mahilo Innovations Ltd.</span>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span className="font-bold text-slate-800 block">SMS & OTP Gateway</span>
+              <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">● Fast2SMS / Firebase Phone Auth</span>
+              <span className="text-[10px] text-slate-400">Sender ID: MAHILO</span>
+            </div>
+          </div>
         </div>
       )}
     </DashboardShell>
