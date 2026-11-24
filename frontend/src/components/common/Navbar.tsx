@@ -315,6 +315,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        onOpenSellerOnboard={() => {
+          setIsAuthModalOpen(false);
+          onOpenSellerOnboard();
+        }}
       />
     </>
   );

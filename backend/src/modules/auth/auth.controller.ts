@@ -211,3 +211,88 @@ export const getMe = async (req: Request, res: Response) => {
     return sendError(res, error.message, 500);
   }
 };
+
+export const googleLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, fullName, avatarUrl } = req.body;
+    if (!email) {
+      return sendError(res, 'Email address is required for Google authentication', 400);
+    }
+
+    // Check if user already exists by email
+    let user = mockDataStore.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+      // Create new user via Google Sign-In
+      user = {
+        id: `usr-${uuidv4().slice(0, 8)}`,
+        fullName: fullName || email.split('@')[0],
+        email: email,
+        phone: '98480' + Math.floor(10000 + Math.random() * 90000),
+        passwordHash: '',
+        avatarUrl: avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName || email)}`,
+        isActive: true,
+        isPhoneVerified: false,
+        isEmailVerified: true,
+        createdAt: new Date(),
+      };
+      mockDataStore.users.push(user);
+
+      // Default role: CUSTOMER
+      mockDataStore.userRoles.push({
+        userId: user.id,
+        roleId: 'role-1', // CUSTOMER
+      });
+
+      // Initialize cart
+      mockDataStore.carts.push({
+        id: `cart-${uuidv4().slice(0, 8)}`,
+        userId: user.id,
+        items: [],
+      });
+    }
+
+    // Get roles
+    const userRoleMappings = mockDataStore.userRoles.filter((ur) => ur.userId === user.id);
+    const roleIds = userRoleMappings.map((ur) => ur.roleId);
+    const assignedRoles = mockDataStore.roles
+      .filter((r) => roleIds.includes(r.id))
+      .map((r) => r.name as RoleType);
+
+    const roles: RoleType[] = assignedRoles.length ? assignedRoles : ['CUSTOMER'];
+    const seller = mockDataStore.sellers.find((s) => s.userId === user.id);
+
+    const tokenPayload: UserSession = {
+      userId: user.id,
+      email: user.email || undefined,
+      phone: user.phone,
+      fullName: user.fullName,
+      roles,
+    };
+
+    const token = jwt.sign(tokenPayload, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn as any,
+    });
+
+    return sendSuccess(
+      res,
+      {
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          phone: user.phone,
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+          roles,
+          sellerId: seller?.id || null,
+          sellerStatus: seller?.status || null,
+          sellerBusinessName: seller?.businessName || null,
+        },
+        token,
+      },
+      'Google sign-in successful'
+    );
+  } catch (error: any) {
+    return sendError(res, error.message || 'Google sign-in failed', 500);
+  }
+};

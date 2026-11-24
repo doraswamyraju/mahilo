@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   register: (fullName: string, phone: string, password: string, email?: string) => Promise<void>;
+  loginWithGoogle: (googleData: { email: string; fullName: string; avatarUrl?: string; idToken?: string }) => Promise<void>;
   logout: () => void;
   switchRole: (role: RoleType) => void;
   refreshUser: () => Promise<void>;
@@ -93,6 +94,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (googleData: { email: string; fullName: string; avatarUrl?: string; idToken?: string }) => {
+    setIsLoading(true);
+    try {
+      const res: any = await api.post('/auth/google', googleData);
+      if (res.success && res.data) {
+        const { user: userData, token: jwtToken } = res.data;
+        setUser(userData);
+        setToken(jwtToken);
+        localStorage.setItem('mahilo_token', jwtToken);
+
+        if (userData.roles.includes('ADMIN') || userData.roles.includes('SUPER_ADMIN')) {
+          setActiveRole('ADMIN');
+          localStorage.setItem('mahilo_active_role', 'ADMIN');
+        } else if (userData.sellerStatus === 'APPROVED' && userData.roles.includes('SELLER')) {
+          setActiveRole('CUSTOMER');
+          localStorage.setItem('mahilo_active_role', 'CUSTOMER');
+        } else {
+          setActiveRole('CUSTOMER');
+          localStorage.setItem('mahilo_active_role', 'CUSTOMER');
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -118,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
+        loginWithGoogle,
         logout,
         switchRole,
         refreshUser,
