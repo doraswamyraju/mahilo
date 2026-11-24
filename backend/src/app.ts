@@ -22,7 +22,13 @@ import path from 'path';
 const app = express();
 
 // Security and HTTP pipelines
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  hsts: false,
+  originAgentCluster: false,
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: false
+}));
 app.use(cors({
   origin: [
     config.clientUrl,

@@ -13,6 +13,11 @@ module.exports = {
         PORT: 5093,
         CLIENT_URL: 'https://mahilo.sriddha.com',
       },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 5093,
+        CLIENT_URL: 'https://mahilo.sriddha.com',
+      },
     },
   ],
 };
